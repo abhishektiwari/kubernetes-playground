@@ -4,9 +4,10 @@ NSPACE=dev
 DFILE=message-api/deployment.yml
 SFILE=message-api/svc.yml
 IFILE=message-api/ing.yml
+VERSION=v1
 
-.PHONY: local
-local:  
+.PHONY: update
+update:  
 	@eval $$(minikube docker-env) ;\
 	docker image build -t $(REPO):$(TIMESTAMP) -f Dockerfile .
 	kubectl set image -n $(NSPACE) deployment/$(REPO) *=$(REPO):$(TIMESTAMP)
@@ -25,4 +26,14 @@ create:
 .PHONY: ingress
 ingress:
 	kubectl create -f $(IFILE)
+
+.PHONY: push
+push: build
+	docker tag $(REPO):$(VERSION) $(REPO):latest
+	docker push $(REPO):$(VERSION)
+	docker push $(REPO):latest
+
+build:
+	@eval $$(minikube docker-env -u);\
+	docker image build -t $(REPO):$(VERSION) -f Dockerfile .
 
